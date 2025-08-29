@@ -22,22 +22,25 @@ for them.
 
 ## Installation
 
-1.  Install [Rust](https://www.rust-lang.org/tools/install).
+### Recommended: Download Release
 
-2.  Clone this repository:
+1.  Go to the [Releases
+    page](https://github.com/Kerpackie/gtnh_finder/releases).
+2.  Download the prebuilt binary for your OS (`gtnh_finder.exe` for
+    Windows, or the Linux binary).
+3.  Place it somewhere in your PATH, or next to your Minecraft world.
 
-    ``` bash
-    git clone https://github.com/yourname/gtnh_finder.git
-    cd gtnh_finder
-    ```
+### Alternative: Build from Source
 
-3.  Build:
+If you prefer compiling yourself:
 
-    ``` bash
-    cargo build --release
-    ```
+``` bash
+git clone https://github.com/yourname/gtnh_finder.git
+cd gtnh_finder
+cargo build --release
+```
 
-4.  The binary will be in `target/release/gtnh_finder`.
+The binary will be at `target/release/gtnh_finder`.
 
 ------------------------------------------------------------------------
 
