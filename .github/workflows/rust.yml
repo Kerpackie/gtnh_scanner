@@ -1,0 +1,70 @@
+name: Rust
+
+on:
+  push:
+    tags: [ "v*" ]   # run only when pushing a version tag like v1.2.3
+
+env:
+  CARGO_TERM_COLOR: always
+  BIN_NAME: gtnh_scanner 
+
+jobs:
+  build:
+    name: Build ${{ matrix.artifact }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: linux-x86_64
+            bin_ext: ""
+            archive: false
+          - os: windows-latest
+            artifact: windows-x86_64
+            bin_ext: ".exe"
+            archive: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build (release)
+        run: cargo build --release --verbose
+
+      - name: Package Linux (raw binary)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          mkdir -p dist
+          cp "target/release/${BIN_NAME}" "dist/${BIN_NAME}-${{ matrix.artifact }}"
+
+      - name: Package Windows (zip)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item "target/release/${env:BIN_NAME}${{ matrix.bin_ext }}" "dist/${env:BIN_NAME}${{ matrix.bin_ext }}"
+          Compress-Archive -Path "dist/*" -DestinationPath "dist/${env:BIN_NAME}-${{ matrix.artifact }}.zip" -Force
+          Remove-Item "dist/${env:BIN_NAME}${{ matrix.bin_ext }}" -Force
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BIN_NAME }}-${{ matrix.artifact }}
+          path: dist/*
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download packaged artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: releases
+
+      - name: Create/Update Release with assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: releases/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
