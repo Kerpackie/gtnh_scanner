@@ -4,6 +4,9 @@ on:
   push:
     tags: [ "v*" ]   # run only when pushing a version tag like v1.2.3
 
+permissions:
+  contents: write
+
 env:
   CARGO_TERM_COLOR: always
   BIN_NAME: gtnh_scanner 
