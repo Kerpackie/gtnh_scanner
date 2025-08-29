@@ -93,6 +93,7 @@ gtnh_finder --world <WORLD_SAVE_DIR> --te-ids <TE_IDS>
   `--color <R,G,B>`           RGB color. Default: `255,255,255`.
 
   `--write`                   Enable write mode (otherwise preview only).
+  
   -----------------------------------------------------------------------
 
 ### Examples
