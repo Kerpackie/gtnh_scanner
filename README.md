@@ -123,14 +123,14 @@ gtnh_finder --world <WORLD_SAVE_DIR> --te-ids <TE_IDS>
     gtnh_finder.exe --world %APPDATA%\.minecraft\saves\MyWorld" --dim -1 --te-ids MobSpawner
     ```
 
--   **Preview all Mob Spawners (no files written):**
+-   **Write waypoints for LootGames Puzzle Master (ID 3460):**
 
     ``` bash
     gtnh_finder.exe --world %APPDATA%\.minecraft\saves\MyWorld" --dim 0 --ids 3460 --y-min 20 --y-max 64 --write --jm-waypoints "%APPDATA%\.minecraft\journeymap\data\sp\MyWorld\waypoints"
 
     ```
 
--   **Preview all Mob Spawners (no files written):**
+-   **Cluster hits (e.g., one marker per dungeon):**
 
     ``` bash
     gtnh_finder.exe --world %APPDATA%\.minecraft\saves\MyWorld" --dim 0 --te-ids MobSpawner --cluster-radius 64 --write --jm-waypoints "%APPDATA%\.minecraft\journeymap\data\sp\MyWorld\waypoints"
