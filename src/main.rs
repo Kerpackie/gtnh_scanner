@@ -314,24 +314,45 @@ fn nbt_get_i8_as_i32(n: &Nbt) -> Option<i32> {
     }
 }
 
-/// Blocks section: returns (Blocks low8, Add nibbles)
-fn section_blocks(section: &HashMap<String, Nbt>) -> Option<(&[u8], Option<&[u8]>)> {
-    let blocks = section.get("Blocks").and_then(nbt_get_bytes)?;
-    let add = section.get("Add").and_then(nbt_get_bytes);
-    Some((blocks, add))
+// ---- UPDATED ----
+#[inline]
+fn block_id_at(
+    blocks: &[u8],
+    add: Option<&[u8]>,
+    blocks_extended: Option<&[u8]>,
+    idx: usize,
+) -> i32 {
+    // Bits 0-7 from the 'Blocks' array
+    let low = blocks[idx] as i32;
+
+    // Bits 8-11 from the vanilla 'Add' array
+    let mid = if let Some(add_data) = add {
+        let byte = add_data[idx / 2];
+        if idx % 2 == 0 {
+            (byte & 0x0F) as i32
+        } else {
+            ((byte >> 4) & 0x0F) as i32
+        }
+    } else {
+        0
+    };
+
+    // Bits 12-15 from Forge's 'BlocksExtended' array
+    let high = if let Some(extended_data) = blocks_extended {
+        let byte = extended_data[idx / 2];
+        if idx % 2 == 0 {
+            (byte & 0x0F) as i32
+        } else {
+            ((byte >> 4) & 0x0F) as i32
+        }
+    } else {
+        0
+    };
+
+    // Combine all parts for the full ID
+    (high << 12) | (mid << 8) | low
 }
 
-#[inline]
-fn block_id_at(blocks: &[u8], add: Option<&[u8]>, idx: usize) -> i32 {
-    let low = blocks[idx] as i32;
-    if let Some(addb) = add {
-        let nib = addb[idx / 2];
-        let upper = if idx % 2 == 0 { nib & 0x0F } else { (nib >> 4) & 0x0F };
-        ((upper as i32) << 8) | low
-    } else {
-        low
-    }
-}
 
 /// ---------------------------
 /// Scan logic
@@ -360,7 +381,11 @@ fn find_blocks_in_chunk(level: &HashMap<String, Nbt>, targets: &HashSet<i32>, y_
         let sec_y_max = sec_y_min + 15;
         if sec_y_max < y_min || sec_y_min > y_max { continue; }
 
-        let (blocks, add) = match section_blocks(sec_comp) { Some(x) => x, None => continue };
+        // ---- UPDATED ----
+        let blocks = match sec_comp.get("Blocks").and_then(nbt_get_bytes) { Some(b) => b, None => continue };
+        let add = sec_comp.get("Add").and_then(nbt_get_bytes);
+        let blocks_extended = sec_comp.get("BlocksExtended").and_then(nbt_get_bytes);
+        
         // index = y*256 + z*16 + x  (x,z,y in 0..15)
         for y_off in 0..16 {
             let ay = sec_y_min + y_off;
@@ -370,7 +395,8 @@ fn find_blocks_in_chunk(level: &HashMap<String, Nbt>, targets: &HashSet<i32>, y_
                 let base_zy = base_y + z * 16;
                 for x in 0..16 {
                     let idx = (base_zy + x) as usize;
-                    let bid = block_id_at(blocks, add, idx);
+                    // ---- UPDATED ----
+                    let bid = block_id_at(blocks, add, blocks_extended, idx);
                     if targets.contains(&bid) {
                         let wx = cx * 16 + x;
                         let wz = cz * 16 + z;
